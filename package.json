@@ -1,0 +1,19 @@
+{
+  "name": "learn-mlmath",
+  "version": "0.1.0",
+  "description": "Interactive ML Math: linear algebra, vector & matrix calculus, matrix decompositions, and the first nail of loss optimization — visualized and ELI-ramped from zero to expert.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.2.1",
+    "vitest": "^3.0.8"
+  }
+}
