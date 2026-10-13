@@ -682,6 +682,9 @@ export class App {
 - Projection: \`p = proj(a, b)\` — a onto b (a perpendicular is drawn)
 - Matrices: \`M = [[2, 1], [1, 3]]\`, map \`v = M * a\` (the unit square deforms)
 - \`det(M)\`, \`transpose(M)\`, \`matmul(A, B)\`
+- Analyze: \`trace(M)\`, \`rank(M)\`, \`inv(M)\` (undo the map), \`sum(v)\`
+- Eigen: \`eigenvalues(M)\`, \`eigenvectors(M)\` — the directions a map only stretches
+- Indexing: \`a[0]\` is a component; \`M[1]\` is the second row
 
 - **Tab** cycles autocomplete · **Ctrl/Cmd+Enter** runs the script editor line.
 `),

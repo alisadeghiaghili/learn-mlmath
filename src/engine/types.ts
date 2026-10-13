@@ -86,7 +86,8 @@ export type Expr =
   | { t: 'ident'; name: string }
   | { t: 'bin'; op: '+' | '-' | '*' | '/'; l: Expr; r: Expr }
   | { t: 'un'; op: '-'; e: Expr }
-  | { t: 'call'; name: string; args: Expr[] };
+  | { t: 'call'; name: string; args: Expr[] }
+  | { t: 'index'; base: Expr; i: Expr };
 
 export type Stmt =
   | { t: 'assign'; name: string; expr: Expr }

@@ -6,7 +6,10 @@
  *   term   := factor (('*' | '/') factor)*
  *   factor := ('-' factor) | primary
  *   primary:= number | list | name ('(' arg (',' arg)* ')')?
+ *   index  := primary '[' expr ']'
  *   list   := '[' (expr (',' expr)* ','?)? ']'
+ *
+ * Indexing: `a[0]` on a vector yields a scalar; `M[1]` on a matrix yields a row.
  *
  * Statements: `name = expr`, `print(expr)`, or a bare `expr`.
  */
@@ -103,7 +106,22 @@ class Parser {
       this.next();
       return { t: 'un', op: '-', e: this.parseFactor() };
     }
-    return this.parsePrimary();
+    return this.parsePrimaryOrIndex();
+  }
+
+  /**
+   * A primary followed by an optional subscript `x[i]`. The base is parsed
+   * first (numbers, lists, names, calls), then we look for `[` and index it.
+   */
+  private parsePrimaryOrIndex(): Expr {
+    const base = this.parsePrimary();
+    if (this.isOp(this.peek(), '[')) {
+      this.next(); // '['
+      const i = this.parseExpr();
+      this.expectOp(']');
+      return { t: 'index', base, i };
+    }
+    return base;
   }
 
   private parsePrimary(): Expr {

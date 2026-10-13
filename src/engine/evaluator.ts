@@ -2,8 +2,14 @@
  * Evaluator: runs parsed statements against `MatState`. Pure over state (no
  * DOM), so the UI, the tests, and `runFresh` all share one code path.
  *
- * Builtins: vec, dot, norm, proj, cross, det, transpose, matmul, matvec, round.
+ * Builtins: vec, dot, norm, proj, cross, det, transpose, matmul, matvec,
+ * trace, inv, rank, eigenvalues, eigenvectors, sum, round.
  * Operators follow Python precedence (built in the parser).
+ *
+ * The runtime has no tuple type, so `eig` is split into two builtins:
+ * `eigenvalues(M)` returns a vector of eigenvalues, `eigenvectors(M)` a matrix
+ * whose *rows* are the corresponding unit eigenvectors, in the same order
+ * (so `eigenvectors(M)[i]` is the eigenvector for `eigenvalues(M)[i]`; A @ v = λ v).
  */
 
 import * as li from './linalg';
@@ -63,6 +69,22 @@ function evalExpr(e: Expr, env: MatState): MValue {
     }
     case 'call':
       return callBuiltin(e.name, e.args.map((a) => evalExpr(a, env)), env);
+    case 'index': {
+      const base = evalExpr(e.base, env);
+      const idx = toNum(evalExpr(e.i, env), 'index');
+      if (!Number.isInteger(idx)) throw new Error('index must be a whole number');
+      if (base.k === 'vec') {
+        const v = base.data[idx];
+        if (v === undefined) throw new Error(`index ${idx} out of range for a ${base.data.length}-vector`);
+        return li.num(v);
+      }
+      if (base.k === 'mat') {
+        const row = base.rows[idx];
+        if (!row) throw new Error(`row ${idx} out of range for a ${base.rows.length}-row matrix`);
+        return li.vec([...row]);
+      }
+      throw new Error('can only index a vector or a matrix');
+    }
     default:
       throw new Error('unreachable');
   }
@@ -204,6 +226,34 @@ function callBuiltin(name: string, args: MValue[], env: MatState): MValue {
       if (args.length !== 2) throw new Error('matvec(M, v)');
       return li.vec(li.matVec(toMat(args[0]!, 'matvec'), toVec(args[1]!, 'matvec')));
     }
+    case 'trace': {
+      if (args.length !== 1) throw new Error('trace(M)');
+      return li.num(li.trace(toMat(args[0]!, 'trace')));
+    }
+    case 'inv': {
+      if (args.length !== 1) throw new Error('inv(M)');
+      return li.mat(li.inv(toMat(args[0]!, 'inv')));
+    }
+    case 'rank': {
+      if (args.length !== 1) throw new Error('rank(M)');
+      return li.num(li.rank(toMat(args[0]!, 'rank')));
+    }
+    case 'eigenvalues': {
+      if (args.length !== 1) throw new Error('eigenvalues(M)');
+      const pairs = li.eig(toMat(args[0]!, 'eigenvalues'));
+      return li.vec(pairs.map((p) => p.value));
+    }
+    case 'eigenvectors': {
+      if (args.length !== 1) throw new Error('eigenvectors(M)');
+      const pairs = li.eig(toMat(args[0]!, 'eigenvectors'));
+      // rows are the unit eigenvectors, in the same order as the eigenvalues
+      return li.mat(pairs.map((p) => [p.vector[0]!, p.vector[1]!]));
+    }
+    case 'sum': {
+      if (args.length !== 1) throw new Error('sum(v)');
+      const v = toVec(args[0]!, 'sum');
+      return li.num(v.reduce((s, x) => s + x, 0));
+    }
     case 'round': {
       if (args.length < 1) throw new Error('round(x)');
       const n = args[0]!;
@@ -212,7 +262,9 @@ function callBuiltin(name: string, args: MValue[], env: MatState): MValue {
       return li.num(Math.round(toNum(n, 'round') * f) / f);
     }
     default:
-      throw new Error(`unknown function '${name}' (try: vec, dot, norm, proj, cross, det, transpose, matmul, matvec, round, print)`);
+      throw new Error(
+        `unknown function '${name}' (try: vec, dot, norm, proj, cross, det, transpose, matmul, matvec, trace, inv, rank, eigenvalues, eigenvectors, sum, round, print)`,
+      );
   }
 }
 

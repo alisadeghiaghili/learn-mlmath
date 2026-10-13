@@ -5,13 +5,15 @@
  */
 
 import type { Level, Sequence } from '../engine/types';
+import { series as matrices } from './matrices';
 import { series as vectors } from './vectors';
 
 /** All series, in teaching order. */
 export const sequences: Sequence[] = [
   ...vectors,
-  // Next series (each a single module): spaces, matrices, decompositions,
-  // calculus, loss — added as they are authored.
+  ...matrices,
+  // Next series (each a single module): spaces, decompositions, calculus,
+  // loss — added as they are authored.
 ];
 
 /**
